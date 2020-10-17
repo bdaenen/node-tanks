@@ -1,0 +1,11 @@
+html {
+    font-family: 'Press Start 2P', sans-serif;
+    background-color: #585858;
+    position: relative;
+    z-index: -1;
+}
+
+html body {
+    background: transparent;
+    color: #DDD;
+}

@@ -1,0 +1,15 @@
+.button-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.button-list li {
+    flex: 1;
+}
+
+.button-list li .nes-btn {
+    width: 100%;
+}

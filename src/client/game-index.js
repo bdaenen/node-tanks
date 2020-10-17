@@ -1,9 +1,17 @@
 import Phaser from 'phaser';
+import { waitForSocket } from './connect'
+import 'nes.css/css/nes.min.css'
+import 'bootstrap/dist/css/bootstrap-grid.min.css'
 
-let socket = new WebSocket('ws://localhost:9001');
+let socket = null;
 
 async function main() {
-    await waitForSocket();
+    try {
+        let socket = await waitForSocket('ws://localhost:9001');
+    }
+    catch {
+
+    }
 
     await (async () => {
         return new Promise((resolve) => {
@@ -93,12 +101,5 @@ async function main() {
     let game = new Phaser.Game(config)
 }
 
-async function waitForSocket() {
-    return new Promise((resolve, reject) => {
-        socket.onopen = (e) => {
-            resolve(e);
-        }
-    })
-}
 
 main();
