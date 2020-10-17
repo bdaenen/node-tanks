@@ -43,6 +43,7 @@ export default class DynamicRoute extends React.Component {
                                 <Component
                                     path={path}
                                     routeName={this.props.name}
+                                    title={this.props.title}
                                     {...routeProps}
                                 />
                             ) : (

@@ -10,14 +10,14 @@ module.exports = function(
     if (app.get('env') === 'development') {
         console.info(blue('started in development mode'))
         return proxy({
-            ws: false,
+            ws: true,
             changeOrigin: true,
             target: snowpackUrl,
             onError: function(err, req, res) {
                 if (err.code === 'ECONNREFUSED') {
                     console.error(
                         red(
-                            `NODE_ENV is set to development, but no webpack server was found at ${snowpackUrl}`
+                            `NODE_ENV is set to development, but no snowpack server was found at ${snowpackUrl}`
                         )
                     )
                     console.error(yellow('You should either:'))

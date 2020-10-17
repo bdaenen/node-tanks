@@ -16,7 +16,7 @@ export default class HomepageRoute extends React.Component {
                         <NavButton href={reverse('create-game')} primary className="px-3">
                             Create Game
                         </NavButton>
-                        <NavButton href={reverse('join-game')} primary className="px-3">
+                        <NavButton href={reverse('game-list')} primary className="px-3">
                             Join Game
                         </NavButton>
                     </ButtonList>

@@ -34,50 +34,48 @@ class CreateGame extends React.Component {
 
     render() {
         const nameIsValid = this.validateName(this.state.gameName)
+
         return (
             <CenteredPage>
                 <PageTitle>Tanks prototype</PageTitle>
-                <Container dark title={'Menu'}>
-                    <ButtonList>
-                        <TextInput
-                            label="Game Name"
-                            placeholder="Enter a name..."
-                            value={this.state.gameName}
-                            style={{ margin: 0 }}
-                            onChange={e => {
-                                this.setState({
-                                    gameName: e.target.value,
-                                })
-                            }}
-                        />
-                        <Row>
-                            <Col>
-                                <Button
-                                    disabled={!nameIsValid}
-                                    onClick={
-                                        nameIsValid
-                                            ? this.createGame
-                                            : undefined
-                                    }
-                                    primary
-                                    className="px-3"
-                                >
-                                    Create
-                                </Button>
-                            </Col>
-                            <Col>
-                                <Button
-                                    onClick={() =>
-                                        this.props.history.push(reverse('home'))
-                                    }
-                                    error
-                                    className="px-3"
-                                >
-                                    Cancel
-                                </Button>
-                            </Col>
-                        </Row>
-                    </ButtonList>
+                <Container dark title={this.props.title}>
+                    <TextInput
+                        label="Game Name"
+                        placeholder="Enter a name..."
+                        value={this.state.gameName}
+                        style={{ margin: 0 }}
+                        onChange={e => {
+                            this.setState({
+                                gameName: e.target.value,
+                            })
+                        }}
+                    />
+                    <Row>
+                        <Col>
+                            <Button
+                                disabled={!nameIsValid}
+                                onClick={
+                                    nameIsValid ? this.createGame : undefined
+                                }
+                                primary
+                                className="px-3"
+                            >
+                                Create
+                            </Button>
+                        </Col>
+                        <Col>
+                            <Button
+                                onClick={() =>
+                                    this.props.history.push(reverse('home'))
+                                }
+                                error
+                                style={{float: 'right'}}
+                                className="px-3"
+                            >
+                                Cancel
+                            </Button>
+                        </Col>
+                    </Row>
                 </Container>
             </CenteredPage>
         )

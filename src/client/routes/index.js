@@ -14,16 +14,16 @@ const routeConfig = [
         name: 'create-game',
     },
     {
-        path: '/game/join/:id',
+        path: '/game/list',
         title: 'Join Game',
-        component: './routes/JoinGame.js',
-        name: 'join-game-by-id',
+        component: './routes/GameList.js',
+        name: 'game-list',
     },
     {
-        path: '/game/join',
-        title: 'Join Game',
-        component: './routes/JoinGame.js',
-        name: 'join-game',
+        path: '/game/join/:id',
+        title: 'Game',
+        component: './routes/Game.js',
+        name: 'game'
     },
     {
         path: '/',

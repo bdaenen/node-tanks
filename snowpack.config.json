@@ -4,6 +4,9 @@
     "src/client": "/_dist_",
     "assets": "/assets"
   },
+  "devOptions": {
+    "port": 3000
+  },
   "plugins": [
     ["@snowpack/plugin-babel", {
       "input": [".jsx"],

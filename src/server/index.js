@@ -4,10 +4,11 @@ const helmet = require('helmet')
 const compression = require('compression')
 const path = require('path')
 const uWebsockets = require('@bdaenen/uwebsockets')
-const uniqid = require('uniqid');
-const bodyParser = require('body-parser');
+const uniqid = require('uniqid')
+const bodyParser = require('body-parser')
 const staticSnow = require('./staticSnow')
-const roomRouter = require('./roomRouter');
+const logger = require('./logger');
+const { router: roomRouter, getRoom, getRooms } = require('./roomRouter')
 
 const app = express()
 const server = require('http').Server(app)
@@ -16,14 +17,15 @@ const server = require('http').Server(app)
 const FPS = 30
 global.phaserOnNodeFPS = FPS // default is 60
 
-const port = process.env.PORT || 3000
+const port = process.env.PORT || 8080
 
 // Allow websocket connections in the CSP.
 app.use(
     helmet({
-        contentSecurityPolicy: {
+        contentSecurityPolicy: false /*{
             connectSrc: ["'self'", 'ws://localhost:8080'],
-        },
+            imgSrc: ["'self'", 'localhost:8080', 'unpkg.com']
+        }*/,
     })
 )
 
@@ -31,7 +33,7 @@ app.use(
 app.use(compression())
 
 // Parse the POST body
-app.use(bodyParser.json());
+app.use(bodyParser.json())
 
 // Add a bunch of headers
 app.use((req, res, next) => {
@@ -50,12 +52,12 @@ app.use((req, res, next) => {
 app.use('/room', roomRouter)
 
 // Finally if nothing was found, rewrite to index.html
-//app.use(staticSnow(app))
+app.use(staticSnow(app))
 server.listen(port, () => {
-    console.log('App is listening on port ' + port)
+    console.log('HTTP: ' + port)
 })
 
-let connections = {};
+let connections = {}
 
 require('@bdaenen/uwebsockets')
     .App()
@@ -65,41 +67,57 @@ require('@bdaenen/uwebsockets')
         maxPayloadLength: 512,
         compression: uWebsockets.DEDICATED_COMPRESSOR_3KB,
 
-        open: (ws) => {
-            let id = uniqid();
-            ws.__id = id;
-            connections[id] = ws;
-            console.log('new connection: ', ws);
-            ws.send(JSON.stringify({
-                type: 'ready',
-                id: id
-            }))
-
-            let scene = game.scene.getScenes(true)[0]
-            scene.events.emit('create-player', ws)
+        open: ws => {
+            let id = uniqid()
+            ws.__id = id
+            connections[id] = ws
+            console.log('new connection: ', ws)
+            ws.send(
+                JSON.stringify({
+                    type: 'ready',
+                    id: id,
+                })
+            )
         },
-        close: (ws) => {
-            console.log(('closing ' + ws.__id));
+        close: ws => {
+            console.log('closing ' + ws.__id)
             let scene = game.scene.getScenes(true)[0]
             scene.events.emit('remove-player', ws)
-            let closedId = ws.__id;
+            let closedId = ws.__id
             Object.entries(connections).forEach(([id, ws]) => {
                 if (id !== closedId) {
-                    ws.send(JSON.stringify({
-                        type: 'left',
-                        id: closedId
-                    }))
+                    ws.send(
+                        JSON.stringify({
+                            type: 'left',
+                            id: closedId,
+                        })
+                    )
                 }
             })
-            delete connections[closedId];
+            delete connections[closedId]
         },
         message: (ws, message, isBinary) => {
-            const { __id } = ws;
-            console.log(message)
+            const { __id } = ws
+            let textDecoder = new TextDecoder('utf-8');
+            let json = textDecoder.decode(message);
+            try {
+                json = JSON.parse(json)
+            }
+            catch (e) {
+                logger.error('Failed to decode json: ' + json);
+            }
+
+            if (json.type === 'join-room') {
+                let room = getRoom(json.id)
+                console.log(room)
+                let game = room.game;
+                let scene = game.scene.getScenes(true)[0]
+                scene.events.emit('create-player', ws)
+            }
         },
     })
     .listen(9001, listenSocket => {
         if (listenSocket) {
-            console.log('Listening to port 9001 (WS)')
+            console.log('WS: 9001')
         }
     })
