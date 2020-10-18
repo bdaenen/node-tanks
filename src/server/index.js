@@ -8,13 +8,14 @@ const uniqid = require('uniqid')
 const bodyParser = require('body-parser')
 const staticSnow = require('./staticSnow')
 const logger = require('./logger');
+const gameMessageHandler = require('./game/gameMessageHandler')
 const { router: roomRouter, getRoom, getRooms } = require('./roomRouter')
 
 const app = express()
 const server = require('http').Server(app)
 
 // set the fps you need
-const FPS = 30
+const FPS = 60
 global.phaserOnNodeFPS = FPS // default is 60
 
 const port = process.env.PORT || 8080
@@ -81,14 +82,21 @@ require('@bdaenen/uwebsockets')
         },
         close: ws => {
             console.log('closing ' + ws.__id)
-            let scene = game.scene.getScenes(true)[0]
-            scene.events.emit('remove-player', ws)
+            if (ws.__roomId) {
+                let room = getRoom(ws.__roomId);
+                let game = room.game;
+                let scene = game.scene.getScenes(true)[0];
+                room.removePlayer(ws.__id);
+                scene.events.emit('remove-player', ws)
+            }
+
             let closedId = ws.__id
+
             Object.entries(connections).forEach(([id, ws]) => {
                 if (id !== closedId) {
                     ws.send(
                         JSON.stringify({
-                            type: 'left',
+                            type: 'playerDisconnected',
                             id: closedId,
                         })
                     )
@@ -97,9 +105,9 @@ require('@bdaenen/uwebsockets')
             delete connections[closedId]
         },
         message: (ws, message, isBinary) => {
-            const { __id } = ws
             let textDecoder = new TextDecoder('utf-8');
             let json = textDecoder.decode(message);
+            logger.info(json)
             try {
                 json = JSON.parse(json)
             }
@@ -109,10 +117,20 @@ require('@bdaenen/uwebsockets')
 
             if (json.type === 'join-room') {
                 let room = getRoom(json.id)
-                console.log(room)
+                if (!room) {
+                    return ws.send(JSON.stringify({
+                        type: 'error',
+                        message: 'Unknown room.'
+                    }))
+                }
+                ws.__roomId = json.id
                 let game = room.game;
+                room.addPlayer(ws.__id);
                 let scene = game.scene.getScenes(true)[0]
                 scene.events.emit('create-player', ws)
+            }
+            else {
+                gameMessageHandler(ws, json);
             }
         },
     })

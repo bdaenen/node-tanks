@@ -9,3 +9,17 @@ html body {
     background: transparent;
     color: #DDD;
 }
+
+.is-error {
+    color: #e76e55;
+}
+
+.is-warning {
+    color: #f7d51d;
+}
+.is-warning:before {
+    content: 'Warning: ';
+}
+.is-error:before {
+    content: 'Error: '
+}

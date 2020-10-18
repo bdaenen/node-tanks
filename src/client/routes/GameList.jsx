@@ -6,6 +6,7 @@ import { get, post } from '../utils'
 import { reverse } from './index'
 import Col from 'react-bootstrap/Col'
 import Row from 'react-bootstrap/Row'
+import ContainerButton from '../components/ContainerButton'
 
 class GameList extends React.Component {
     state = {
@@ -39,7 +40,17 @@ class GameList extends React.Component {
             return <CenteredPage>Loading...</CenteredPage>
         }
         if (!games.length) {
-            return <CenteredPage>No active games.</CenteredPage>
+            return <CenteredPage>
+                <Container dark>
+                        No active games.
+                    <ContainerButton position="bottomLeft" primary onClick={() => {
+                        this.componentDidMount()
+                    }}>Refresh</ContainerButton>
+                    <ContainerButton position="bottomRight" onClick={() => {
+                        this.props.history.replace(reverse('home'))
+                    }}>Back</ContainerButton>
+                </Container>
+            </CenteredPage>
         }
 
         return (
@@ -63,6 +74,7 @@ class GameList extends React.Component {
                             </Row>
                         </Container>
                     ))}
+                    <ContainerButton position="bottomLeft" success onClick={() => this.componentDidMount()}>Refresh</ContainerButton>
                 </Container>
             </>
         )

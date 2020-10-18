@@ -1,4 +1,5 @@
 import Phaser from 'phaser'
+import { ucFirst } from '../utils'
 
 export default function createMainScene(socket, socketId) {
     return class MainScene extends Phaser.Scene {
@@ -11,49 +12,75 @@ export default function createMainScene(socket, socketId) {
             super(config)
             this.sprites = null
             this.player = null
-            this.socket = socket;
+            this.socket = socket
         }
 
         create() {
-            const socket = this.socket
             this.sprites = {}
             this.player = this.add.sprite(-100, -100, 'tank_player')
             this.player.setDataEnabled()
             this.player.setData('id', socketId)
-            socket.onmessage = event => {
-                let data = JSON.parse(event.data)
-                switch (data.type) {
-                    case 'update':
-                        console.log('update')
-                        data.data.forEach(player => {
-                            let sprite = this.sprites[player.id]
-                            if (player.id === this.player.getData('id')) {
-                                sprite = this.player
-                            }
 
-                            if (sprite) {
-                                sprite.setPosition(player.x, player.y)
-                            } else {
-                                let sprite = this.add.sprite(
-                                    data.x,
-                                    data.y,
-                                    'tank_network'
-                                )
-                                sprite.setDataEnabled()
-                                sprite.setData('id', data.id)
-                                this.sprites[player.id] = sprite
-                            }
-                        })
-                        break
-                    case 'left':
-                        this.sprites[data.id]?.destroy()
-                        delete this.sprites[data.id]
-                        break
-                }
-            }
-            console.log(socket)
+            this.socket.addEventListener('message', event => {
+                let data = JSON.parse(event.data)
+                this[`handle${ucFirst(data.type)}`]?.(data)
+            })
+
+            this.initControls()
         }
 
-        update() {}
+        initControls() {
+            let keys = this.input.keyboard.addKeys({
+                up: 'up',
+                down: 'down',
+                left: 'left',
+                right: 'right',
+            })
+
+            Object.entries(keys).forEach(([name, key]) => {
+                key.on('down', e => {
+                    this.socket.send(
+                        JSON.stringify({
+                            type: 'input-down',
+                            data: name,
+                        })
+                    )
+                })
+                key.on('up', e => {
+                    this.socket.send(
+                        JSON.stringify({
+                            type: 'input-up',
+                            data: name,
+                        })
+                    )
+                })
+            })
+        }
+
+        handleUpdate(message) {
+            let data = message.data;
+            data.forEach(player => {
+                let sprite = this.sprites[player.id]
+                if (player.id === this.player.getData('id')) {
+                    sprite = this.player
+                }
+
+                if (sprite) {
+                    sprite.setPosition(player.x, player.y)
+                } else {
+                    let sprite = this.add.sprite(data.x, data.y, 'tank_network')
+                    sprite.setDataEnabled()
+                    sprite.setData('id', data.id)
+                    this.sprites[player.id] = sprite
+                }
+            })
+        }
+
+        handlePlayerDisconnect(message) {
+            this.sprites[message.id]?.destroy()
+            delete this.sprites[message.id]
+        }
+
+        update(time, delta) {}
     }
 }

@@ -39,3 +39,7 @@ export function getCurrentDomain() {
     const { protocol, hostname, port } = window.location;
     return `${protocol}//${hostname}:${port}`
 }
+
+export function ucFirst(str) {
+    return str[0].toUpperCase() + str.slice(1)
+}

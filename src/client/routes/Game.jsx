@@ -3,13 +3,22 @@ import Phaser from 'phaser'
 import { waitForSocket } from '../connect'
 import CenteredPage from '../layout/CenteredPage'
 import createMainScene from '../scenes/MainScene'
+import { Button, Container } from 'nes-react'
+import ContainerButton from '../components/ContainerButton'
+import { reverse } from './index'
 
 export default class Game extends React.Component {
     state = {
         connected: false,
         socket: null,
         game: null,
-        socketId: null
+        socketId: null,
+        error: null
+    }
+
+    componentWillUnmount() {
+        this.state.game && this.state.game.destroy();
+        this.state.socket && this.state.socket.close();
     }
 
     async componentDidMount() {
@@ -20,16 +29,37 @@ export default class Game extends React.Component {
             socket = await waitForSocket('ws://localhost:9001')
         } catch {}
 
+        // Wait for pur unique socket/session ID
         let socketId = await (async () => {
             return new Promise(resolve => {
-                socket.onmessage = event => {
-                    let data = JSON.parse(event.data)
-                    if (data.type === 'ready') {
-                        resolve(data.id)
+                socket.addEventListener('message', function handleReady(event) {
+                    try {
+                        let data = JSON.parse(event.data)
+                        if (data.type === 'ready') {
+                            socket.removeEventListener('message', handleReady)
+                            resolve(data.id)
+                        }
                     }
-                }
+                    catch(err) {
+                        console.warn(err, event)
+                    }
+                })
             })
         })()
+
+        socket.addEventListener('message', (event) => {
+            if (event.data) {
+                try {
+                    let data = JSON.parse(event.data);
+                    if (data.type === 'error') {
+                        this.setState({error: data.message});
+                        socket.close();
+                    }
+                }catch (err) {
+                    console.warn(err, event);
+                }
+            }
+        })
 
         socket.send(JSON.stringify({type: 'join-room', id: this.props.match.params.id}));
 
@@ -64,8 +94,20 @@ export default class Game extends React.Component {
     }
 
     render() {
-        const { socket, connected } = this.state
+        const { error, socket, connected } = this.state
 
+        if (error) {
+            return <CenteredPage>
+                <Container dark>
+                    <div className="nes-text is-error">
+                        {error}
+                    </div>
+                    <ContainerButton position="bottom" primary onClick={() => {
+                        this.props.history.replace(reverse('home'))
+                    }}>Back</ContainerButton>
+                </Container>
+            </CenteredPage>
+        }
         if (!socket || !connected) {
             return <CenteredPage>Connecting...</CenteredPage>
         }

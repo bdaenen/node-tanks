@@ -2,7 +2,6 @@ import React from 'react'
 import CenteredPage from '../layout/CenteredPage'
 import PageTitle from '../components/PageTitle'
 import { Button, Container, TextInput } from 'nes-react'
-import ButtonList from '../components/ButtonList'
 import { post } from '../utils'
 import { reverse } from './index'
 import Col from 'react-bootstrap/Col'
@@ -19,14 +18,14 @@ class CreateGame extends React.Component {
 
     createGame = async () => {
         try {
-            let roomId = await post({
+            let response = await post({
                 url: '/room/create',
                 data: {
                     name: this.state.gameName,
                 },
             })
 
-            this.history.push(reverse('join-game-by-id', { id: roomId }))
+            this.props.history.push(reverse('game', { id: response.id }))
         } catch (err) {
             console.error(err)
         }

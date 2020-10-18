@@ -1,0 +1,45 @@
+
+/* These collapse so it's never more than 60 */
+.nes-container .container-button-wrapper {
+	margin-bottom: 60px;
+}
+.nes-container .container-button-wrapper + .container-button-wrapper {
+	margin-bottom: 0;
+	margin-top: 60px;
+}
+
+.container-button {
+	position: absolute;
+}
+
+.container-button.topLeft {
+	left: 7px;
+	top: 7px;
+}
+
+.container-button.top {
+	top: 7px;
+	left: 50%;
+	transform: translateX(-50%);
+}
+
+.container-button.topRight {
+	top: 7px;
+	right: 7px;
+}
+
+.container-button.bottomLeft {
+	left: 7px;
+	bottom: 7px;
+}
+
+.container-button.bottomRight {
+	right: 7px;
+	bottom: 7px;
+}
+
+.container-button.bottom {
+	left: 50%;
+	transform: translateX(-50%);
+	bottom: 7px;
+}

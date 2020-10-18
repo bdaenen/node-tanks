@@ -10,7 +10,18 @@ router.use('/create', function (req, res) {
     rooms[id] = {
         id,
         game: createGame(),
-        name: req.body.name
+        name: req.body.name,
+        players: [],
+        addPlayer: function(id) {
+            this.players.push(id)
+        },
+        removePlayer: function(id) {
+            this.players = this.players.filter((pid) => pid !== id)
+            console.log(process.env.NODE_ENV)
+            if (!this.players.length && process.env.NODE_ENV === 'production') {
+                destroyRoom(this.id)
+            }
+        }
     };
 
     logger.info(`Created room: ${req.body.name} (${id})`);
@@ -38,6 +49,14 @@ function getRoom(id) {
 
 function getRooms() {
     return rooms;
+}
+
+function destroyRoom(id) {
+    let room = getRoom(id)
+    if (room) {
+        room.game.destroy();
+        delete rooms[id]
+    }
 }
 
 module.exports = { router, getRoom, getRooms }
