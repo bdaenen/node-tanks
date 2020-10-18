@@ -15,7 +15,7 @@ const app = express()
 const server = require('http').Server(app)
 
 // set the fps you need
-const FPS = 60
+const FPS = 120
 global.phaserOnNodeFPS = FPS // default is 60
 
 const port = process.env.PORT || 8080
@@ -96,7 +96,7 @@ require('@bdaenen/uwebsockets')
                 if (id !== closedId) {
                     ws.send(
                         JSON.stringify({
-                            type: 'playerDisconnected',
+                            type: 'playerDisconnect',
                             id: closedId,
                         })
                     )

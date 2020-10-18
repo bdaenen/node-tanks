@@ -1,4 +1,7 @@
 const Phaser = require('phaser')
+const geckos = require('@geckos.io/snapshot-interpolation')
+
+const SI = new geckos.SnapshotInterpolation(global.phaserOnNodeFPS)
 
 class MainScene extends Phaser.Scene {
     constructor() {
@@ -7,6 +10,7 @@ class MainScene extends Phaser.Scene {
     }
 
     create() {
+        this.physics.world.setBoundsCollision();
         this.sprites = []
         this.events.addListener('create-player', ws => {
             let playerSprite = this.physics.add.sprite(
@@ -14,6 +18,7 @@ class MainScene extends Phaser.Scene {
                 Math.round(Math.random() * 200),
                 ''
             )
+            playerSprite.setCollideWorldBounds();
             playerSprite.setDataEnabled()
             playerSprite.setData('ws', ws)
             playerSprite.setData('input', {})
@@ -35,46 +40,70 @@ class MainScene extends Phaser.Scene {
             let sprite = this.sprites.find(
                 sprite => ws === sprite.getData('ws')
             )
-            sprite.setVelocityY(150)
-            /*sprite.setData('input', {
+
+            sprite.setData('input', {
                 ...sprite.getData('input'),
                 [key]: true,
-            })*/
+            })
         })
         this.events.addListener('input-up', ({ ws, key }) => {
             let sprite = this.sprites.find(
                 sprite => ws === sprite.getData('ws')
             )
-            sprite.setVelocityY(0)
-            /*sprite.setData('input', {
+
+            sprite.setData('input', {
                 ...sprite.getData('input'),
                 [key]: false,
-            })*/
+            })
         })
+
+        this.events.on('postupdate', this.postUpdate, this)
     }
 
-    update() {
+    update(time, delta) {
+        this.sprites.forEach(sprite => {
+            let input = sprite.getData('input')
+            if (input.up) {
+                let vector = this.physics.velocityFromRotation(
+                    sprite.rotation,
+                    150
+                )
+                sprite.setVelocity(vector.x, vector.y)
+            } else if (input.down) {
+                let vector = this.physics.velocityFromRotation(
+                    sprite.rotation,
+                    150
+                )
+                sprite.setVelocity(-vector.x, -vector.y)
+            } else {
+                sprite.setVelocity(0, 0)
+            }
+
+            if (input.left) {
+                sprite.setAngularVelocity(-100)
+            } else if (input.right) {
+                sprite.setAngularVelocity(100)
+            } else {
+                sprite.setAngularVelocity(0)
+            }
+        })
+    }
+    postUpdate(time, delta) {
         let data = this.sprites.map(sprite => {
             return {
                 id: sprite.getData('ws').__id,
                 x: sprite.x,
                 y: sprite.y,
+                rotation: sprite.rotation,
             }
         })
 
+        const snapshot = SI.snapshot.create(data)
+
         this.sprites.forEach(sprite => {
-            /*let input = sprite.getData('input');
-            if (input.up) {
-                sprite.setVelocityY(100)
-            }
-            else {
-                sprite.setVelocityY(0)
-            }*/
             sprite
                 .getData('ws')
-                .send(JSON.stringify({ type: 'update', data: data }))
-
-            console.log(sprite.getData('ws').getBufferedAmount())
+                .send(JSON.stringify({ type: 'update', snapshot }))
         })
     }
 }

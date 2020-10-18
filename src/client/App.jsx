@@ -85,7 +85,6 @@ class App extends React.Component {
                         success
                         disabled={!this.isNameValid(username)}
                         onClick={this.isNameValid(username) ? () => {
-                            console.log(username)
                             localStorage.setItem('tanks.name', username)
                             this.setState({
                                 confirmedName: true,

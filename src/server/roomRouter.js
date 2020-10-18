@@ -17,7 +17,6 @@ router.use('/create', function (req, res) {
         },
         removePlayer: function(id) {
             this.players = this.players.filter((pid) => pid !== id)
-            console.log(process.env.NODE_ENV)
             if (!this.players.length && process.env.NODE_ENV === 'production') {
                 destroyRoom(this.id)
             }
@@ -26,12 +25,6 @@ router.use('/create', function (req, res) {
 
     logger.info(`Created room: ${req.body.name} (${id})`);
     return res.json({ id })
-})
-
-
-router.post('/join', function (req, res) {
-    let id = req.query.id;
-    debugger;
 })
 
 router.get('/', function(req, res, next) {
