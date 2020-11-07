@@ -86,6 +86,19 @@ class MainScene extends Phaser.Scene {
             } else {
                 sprite.setAngularVelocity(0)
             }
+
+            if (input.space && !sprite.getData('firing')) {
+                sprite.setData('firing', true)
+                let projectile = this.physics.add.sprite(sprite.x, sprite.y, '')
+                let vector = this.physics.velocityFromRotation(
+                    sprite.rotation,
+                    300
+                )
+                projectile.setVelocity(vector.x, vector.y)
+                projectile.setRotation(sprite.rotation)
+                sprite.setData('projectiles', [projectile])
+                // TODO: add colliisons, destroy on collide + deal damage, set firing to false.
+            }
         })
     }
     postUpdate(time, delta) {
@@ -95,6 +108,11 @@ class MainScene extends Phaser.Scene {
                 x: sprite.x,
                 y: sprite.y,
                 rotation: sprite.rotation,
+                projectiles: sprite.getData('projectiles').map((projectile) => ({
+                    x: projectile.x,
+                    y: projectile.y,
+                    rotation: projectile.rotation
+                }))
             }
         })
 

@@ -37,11 +37,12 @@ export default function createMainScene(socket, socketId) {
                 down: 'down',
                 left: 'left',
                 right: 'right',
+                space: 'SPACE'
             })
 
             Object.entries(keys).forEach(([name, key]) => {
                 key.on('down', e => {
-                    console.time('latency')
+//                    console.time('latency')
                     this.socket.send(
                         JSON.stringify({
                             type: 'input-down',
@@ -85,7 +86,7 @@ export default function createMainScene(socket, socketId) {
                 if (player.id === this.player.getData('id')) {
                     sprite = this.player
                     if (player.y !== sprite.y) {
-                        console.timeEnd('latency')
+//                        console.timeEnd('latency')
                     }
                 }
 
@@ -117,7 +118,7 @@ export default function createMainScene(socket, socketId) {
                 if (!this.doingRandomInput) {
                     return;
                 }
-                console.log('changing input!')
+//                console.log('changing input!')
                 if (this.downButton) {
                     this.socket.send(
                         JSON.stringify({

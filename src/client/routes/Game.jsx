@@ -6,6 +6,7 @@ import createMainScene from '../scenes/MainScene'
 import { Button, Container } from 'nes-react'
 import ContainerButton from '../components/ContainerButton'
 import { reverse } from './index'
+/*
 let size = 0;
 let seconds = 0
 
@@ -13,6 +14,7 @@ setInterval(() => {
     seconds++;
     console.info(`${size/125000/seconds}mbit/s`)
 }, 1000)
+*/
 
 export default class Game extends React.Component {
     state = {
@@ -41,14 +43,14 @@ export default class Game extends React.Component {
         let socketId = await (async () => {
             return new Promise(resolve => {
                 socket.addEventListener('message', function handleReady(event) {
-                    size += event.data.length;
+//                    size += event.data.length;
                     if (done) {
                         return;
                     }
                     try {
                         let data = JSON.parse(event.data)
                         if (data.type === 'ready') {
-                           // socket.removeEventListener('message', handleReady)
+/*//*/                      socket.removeEventListener('message', handleReady)
                             done = true;
                             resolve(data.id)
                         }
