@@ -7,11 +7,17 @@ export default function createMainScene(socket, socketId) {
         preload() {
             this.load.image('tank_network', '/assets/tank_dark.png')
             this.load.image('tank_player', '/assets/tank_green.png')
+            this.load.image('rocket_network', '/assets/bulletRed3_outline.png')
+            this.load.image('rocket', '/assets/bulletGreen3_outline.png')
+            for (let i = 1; i <= 5; i++) {
+                this.load.image(`explosion_${i}`, `/assets/explosionSmoke${i}.png`)
+            }
         }
 
         constructor(config) {
             super(config)
             this.sprites = null
+            this.projectiles = null;
             this.player = null
             this.socket = socket
             this.SI = new SnapshotInterpolation(120)
@@ -19,6 +25,7 @@ export default function createMainScene(socket, socketId) {
 
         create() {
             this.sprites = {}
+            this.projectiles = {}
             this.player = this.add.sprite(-100, -100, 'tank_player')
             this.player.setDataEnabled()
             this.player.setData('id', socketId)
@@ -72,9 +79,24 @@ export default function createMainScene(socket, socketId) {
         }
 
         update(time, delta) {
+            this.updatePlayers();
+            this.updateProjectiles();
+
+
+            if (!document.hasFocus() && !this.doingRandomInput) {
+                this.doingRandomInput = true;
+                this.doRandomInput()
+            }
+            else if (document.hasFocus()) {
+                this.doingRandomInput = false;
+            }
+        }
+
+        updatePlayers() {
             const snapshot = this.SI.calcInterpolation(
-                'x y rotationInDeg(rotation)'
+                'x y rotationInDeg(rotation)', 'players'
             )
+
             if (!snapshot) {
                 return
             }
@@ -85,9 +107,9 @@ export default function createMainScene(socket, socketId) {
                 let sprite = this.sprites[player.id]
                 if (player.id === this.player.getData('id')) {
                     sprite = this.player
-                    if (player.y !== sprite.y) {
+//                    if (player.y !== sprite.y) {
 //                        console.timeEnd('latency')
-                    }
+//                    }
                 }
 
                 if (sprite) {
@@ -104,14 +126,49 @@ export default function createMainScene(socket, socketId) {
                     this.sprites[player.id] = sprite
                 }
             })
+        }
+        updateProjectiles() {
+            const snapshot = this.SI.calcInterpolation(
+                'x y rotationInDeg(rotation)', 'projectiles'
+            )
 
-            if (!document.hasFocus() && !this.doingRandomInput) {
-                this.doingRandomInput = true;
-                this.doRandomInput()
+            if (!snapshot) {
+                return
             }
-            else if (document.hasFocus()) {
-                this.doingRandomInput = false;
+
+            const { state } = snapshot
+
+            if (this.projectiles.length > state.length) {
+                this.projectiles = this.projectiles.filter((projectile) => {
+                    return state.find(networkProjectile => networkProjectile.id === projectile.getData('id'))
+                })
             }
+
+            state.forEach(projectile => {
+                let sprite = this.projectiles[projectile.id]
+                if (projectile.playerId === this.player.getData('id')) {
+                    // This is our rocket - do we care?
+                }
+
+                if (sprite) {
+                    sprite.setPosition(projectile.x, projectile.y)
+                    sprite.setRotation(projectile.rotation)
+                } else {
+                    let texture = 'rocket_network'
+                    if (projectile.playerId === this.player.getData('id')) {
+                        texture = 'rocket'
+                    }
+                    let sprite = this.add.sprite(
+                        projectile.x,
+                        projectile.y,
+                        texture
+                    )
+                    sprite.setDataEnabled()
+                    sprite.setData('playerId', projectile.playerId)
+                    sprite.setData('id', projectile.id)
+                    this.projectiles[projectile.id] = sprite;
+                }
+            })
         }
         doRandomInput() {
             setTimeout(() => {
